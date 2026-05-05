@@ -3,6 +3,8 @@ import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def main():
     if len(sys.argv) <= 1:
@@ -18,19 +20,21 @@ def main():
     #does not appear that the code needs to emulate geolcation data to force the EN store
     #(which is necessary for the user_id_field variable)
     actions = ActionChains(driver)
+    wait = WebDriverWait(driver, 5)
 
-    driver.implicitly_wait(1)
     driver.get('https://store.wizardry.info/')
 
-    user_id_field = driver.find_element(By.XPATH, "(//input[@placeholder='Enter your user ID'])")
+    # Dismiss GDPR consent overlay before it intercepts login button click
+    gdpr_button = wait.until(EC.element_to_be_clickable((By.ID, "reject-button")))
+    gdpr_button.click()
+
+    user_id_field = wait.until(EC.element_to_be_clickable((By.XPATH, "(//input[@placeholder='Enter your user ID'])")))
     login_button = driver.find_element(By.XPATH, "(//button[@data-testid='fast-login-button-authorization-user-id'])")
 
     actions.move_to_element(login_button).perform()
     user_id_field.send_keys(sys.argv[1])
     login_button.click()
     time.sleep(2.5)
-
-    driver.find_element(By.ID, "reject-button").click()
 
     free_gems_button = driver.find_element(By.XPATH, "(//button[@data-sku='jp.co.drecom.wizardry.daphne.X_gem900010'])")
     if(not free_gems_button.is_enabled()):
