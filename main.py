@@ -20,7 +20,7 @@ def main():
     #does not appear that the code needs to emulate geolcation data to force the EN store
     #(which is necessary for the user_id_field variable)
     actions = ActionChains(driver)
-    wait = WebDriverWait(driver, 5)
+    wait = WebDriverWait(driver, 10)
 
     driver.get('https://store.wizardry.info/')
 
