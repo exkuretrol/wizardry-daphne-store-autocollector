@@ -33,10 +33,14 @@ def main():
     driver.find_element(By.ID, "reject-button").click()
 
     free_gems_button = driver.find_element(By.XPATH, "(//button[@data-sku='jp.co.drecom.wizardry.daphne.X_gem900010'])")
+    if(not free_gems_button.is_enabled()):
+        print("Free gems button is not enabled; likely already clicked. Exiting.")
+        driver.quit()
+        sys.exit()
     actions.move_to_element(free_gems_button).perform()
     free_gems_button.click()
     time.sleep(2.5)
-    
+
     driver.quit()
 
 
