@@ -2,23 +2,29 @@
 
 \[English | [繁體中文](readme.zh-TW.md)\]
 
-This is just a small bit of code to autocollect Wizardry Variants Daphne weekly free rewards from the online store.
+A tiny tool that auto-collects the weekly free rewards from the [Wizardry Variants Daphne online store](https://store.wizardry.info/). It targets the international web store, so no VPN is required.
 
-To execute, the imports need settled:
+The recommended way to use it is **GitHub Actions** — fork this repo, set one secret, done. Your machine never has to be on.
+
+### Quick start (GitHub Actions, recommended)
+
+1. **Fork** this repo.
+2. In your fork, go to **Settings → Secrets and variables → Actions → New repository secret**.
+3. Add a secret named `WIZARDRY_USER_ID` with your Wizardry user ID as the value.
+4. Go to the **Actions** tab and enable workflows if prompted.
+5. Done. The workflow runs every Monday at 11:00 UTC. To verify the setup, manually trigger it from the Actions tab.
+
+To change the schedule, edit the `cron` line in `.github/workflows/python-app.yml`. See [crontab.guru](https://crontab.guru/) — note that GitHub Actions always uses UTC.
+
+The workflow includes [`keepalive-workflow`](https://github.com/gautamkrishnar/keepalive-workflow), which prevents GitHub from auto-disabling the cron after 60 days of repo inactivity.
+
+### Running locally (optional)
+
+If you'd rather run the script on your own machine:
 
 ```
-pip install selenium
+pip install -r requirements.txt
+python main.py [your_Wizardry_ID]
 ```
 
-Then execute `python main.py [your_Wizardry_ID]` on the command line.
-
-This file should work across environments, locales, and operating systems; it just requires the Chrome webdriver. Should also be compatible with `cron` (see the GitHub Actions workflow for an example).
-
-### Running on GitHub Actions
-
-The included workflow at `.github/workflows/python-app.yml` runs weekly (Mondays at 11:00 UTC) and can also be triggered manually.
-
-The `WIZARDRY_USER_ID` repository secret **must be set** before the workflow can run — both scheduled and manual runs will fail-fast otherwise.
-
-1. In your fork, go to **Settings → Secrets and variables → Actions → New repository secret**.
-2. Add a secret named `WIZARDRY_USER_ID` with your Wizardry user ID as the value.
+Requires Chrome and a matching Chrome webdriver.
