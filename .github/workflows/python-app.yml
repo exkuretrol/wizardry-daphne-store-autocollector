@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -32,3 +32,4 @@ jobs:
           exit 1
         fi
         python main.py "$WIZARDRY_USER_ID"
+    - uses: gautamkrishnar/keepalive-workflow@v2
