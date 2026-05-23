@@ -16,7 +16,7 @@ The recommended way to use it is **GitHub Actions** — fork this repo, set one 
 
 To change the schedule, edit the `cron` line in `.github/workflows/python-app.yml`. See [crontab.guru](https://crontab.guru/) — note that GitHub Actions always uses UTC.
 
-The workflow includes [`keepalive-workflow`](https://github.com/gautamkrishnar/keepalive-workflow), which prevents GitHub from auto-disabling the cron after 60 days of repo inactivity.
+A second workflow at `.github/workflows/keep-alive.yml` uses [`pagopa/dx`'s keep-alive action](https://github.com/pagopa/dx/tree/main/actions/keep-alive) to push an empty commit when the repo has been inactive for 55+ days. This prevents GitHub from auto-disabling the autocollector schedule after 60 days of inactivity. No setup needed — it uses the auto-provisioned `GITHUB_TOKEN`.
 
 ### Running locally (optional)
 

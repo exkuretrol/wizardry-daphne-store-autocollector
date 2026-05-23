@@ -16,7 +16,7 @@
 
 想改執行時間，編輯 `.github/workflows/python-app.yml` 中的 `cron` 字串即可。格式說明可參考 [crontab.guru](https://crontab.guru/)，注意 **GitHub Actions 一律使用 UTC 時間**。
 
-Workflow 內建 [`keepalive-workflow`](https://github.com/gautamkrishnar/keepalive-workflow)，可避免 GitHub 因 repo 60 天沒有 commit 而自動停用排程。
+另外有一個 `.github/workflows/keep-alive.yml` 工作流程，使用 [`pagopa/dx` 的 keep-alive action](https://github.com/pagopa/dx/tree/main/actions/keep-alive)，當 repo 超過 55 天沒有 commit 時自動推一筆空 commit，避免 GitHub 因 60 天閒置而停用排程。不需要額外設定，使用 GitHub 自動提供的 `GITHUB_TOKEN`。
 
 ### 本機執行（選用）
 
