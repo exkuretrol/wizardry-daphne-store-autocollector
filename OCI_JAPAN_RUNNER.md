@@ -8,19 +8,53 @@ This SOP creates an Oracle Cloud Free Tier VM in Japan and registers it as the G
 
 Use an Oracle Cloud Free Tier account and do not upgrade to Pay As You Go. A Free Tier account that is not upgraded cannot create paid resources after the trial, which is the safest no-surprise-cost setup. Oracle Always Free resources continue after the trial when they stay within Oracle's limits.
 
-Create one Always Free instance:
+Oracle asks for a valid credit card during signup. This is normal for account verification. Stay on Free Tier and do not upgrade the account.
 
-- Region: Japan Osaka
+Create one VM:
+
+1. Sign in to the Oracle Cloud Console.
+2. Check the top-right region selector. Use `Japan Central (Osaka)`. If your account is already fixed to Tokyo, use `Japan East (Tokyo)`.
+3. Open `Menu -> Compute -> Instances`.
+4. Click `Create instance`.
+5. Name the instance `wvd-jp-runner`.
+6. In `Placement`, keep the default availability domain.
+7. In `Image and shape`, click `Edit`.
+8. Set Image to `Oracle Linux 10`.
+9. Set Shape to `VM.Standard.E2.1.Micro`. Confirm it is marked Always Free-eligible.
+10. In `Networking`, choose `Create new virtual cloud network` and keep the default public subnet settings. The VM needs one VNIC, a public subnet, and a public IPv4 address so you can SSH into it.
+11. In `Add SSH keys`, choose `Paste public keys` and paste your local SSH public key, usually from `~/.ssh/id_ed25519.pub`.
+12. In `Boot volume`, set the size to `50 GB`.
+13. Expand `Show advanced options -> Management -> Initialization script`.
+14. Paste the full contents of [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml).
+15. Click `Create`.
+
+Minimum expected VM configuration:
+
+- OS: Oracle Linux 10
 - Shape: `VM.Standard.E2.1.Micro`
-- Image: Oracle Linux, Always Free-eligible
-- Boot volume: default size
-- Public SSH access: enabled
+- Network: 1 VNIC in a public subnet with public IPv4
+- Boot volume: 50 GB
 
-If the Oracle account is already pinned to Japan Tokyo, create the same instance there. Do not spend time trying to create `VM.Standard.A1.Flex` for this runner. In 2026, Always Free A1.Flex capacity is usually unavailable in popular regions. Use `VM.Standard.E2.1.Micro` and swap.
+After creation, wait until the instance state is `Running`. Open the instance details page and copy the `Public IPv4 address`. Add it to your local SSH config:
 
-## 2. Paste Cloud-Init
+```sshconfig
+Host oc_gitrunner
+  HostName YOUR_PUBLIC_IPV4
+  User opc
+  IdentityFile ~/.ssh/id_ed25519
+```
 
-During instance creation, paste [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml) into the Oracle Cloud cloud-init/user-data field.
+Test SSH:
+
+```sh
+ssh oc_gitrunner
+```
+
+Do not spend time trying to create `VM.Standard.A1.Flex` for this runner. In 2026, Always Free A1.Flex capacity is usually unavailable in popular regions. Use `VM.Standard.E2.1.Micro` and swap.
+
+## 2. Verify Cloud-Init
+
+The instance creation step already pasted [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml) into the Oracle Cloud initialization script field.
 
 The cloud-init script:
 

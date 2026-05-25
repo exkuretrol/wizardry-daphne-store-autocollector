@@ -8,19 +8,53 @@
 
 使用 Oracle Cloud Free Tier 帳號，不要升級到 Pay As You Go。未升級的 Free Tier 帳號在試用期後不能建立付費資源，這是避免意外費用的做法。Oracle Always Free 資源只要維持在 Oracle 限制內，試用期後仍可繼續使用。
 
-建立一台 Always Free instance：
+Oracle 註冊時會要求有效信用卡，這是帳號驗證用。保持 Free Tier，不要升級帳號。
 
-- Region：Japan Osaka
+建立一台 VM：
+
+1. 登入 Oracle Cloud Console。
+2. 確認右上角 region selector。使用 `Japan Central (Osaka)`。如果帳號已固定在 Tokyo，就使用 `Japan East (Tokyo)`。
+3. 開啟 `Menu -> Compute -> Instances`。
+4. 點 `Create instance`。
+5. Instance name 填 `wvd-jp-runner`。
+6. `Placement` 保持預設 availability domain。
+7. 在 `Image and shape` 點 `Edit`。
+8. Image 選 `Oracle Linux 10`。
+9. Shape 選 `VM.Standard.E2.1.Micro`，確認畫面標示 Always Free-eligible。
+10. `Networking` 選 `Create new virtual cloud network`，public subnet 設定保持預設。VM 需要 1 個 VNIC、public subnet、public IPv4 address，才方便 SSH 連線。
+11. `Add SSH keys` 選 `Paste public keys`，貼上本機 SSH public key，通常是 `~/.ssh/id_ed25519.pub` 的內容。
+12. `Boot volume` 設成 `50 GB`。
+13. 展開 `Show advanced options -> Management -> Initialization script`。
+14. 貼上 [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml) 的完整內容。
+15. 點 `Create`。
+
+最低預期 VM 設定：
+
+- OS：Oracle Linux 10
 - Shape：`VM.Standard.E2.1.Micro`
-- Image：Oracle Linux，Always Free-eligible
-- Boot volume：預設大小
-- Public SSH access：啟用
+- Network：1 個 VNIC，在 public subnet，並有 public IPv4
+- Boot volume：50 GB
 
-如果 Oracle 帳號已經固定在 Japan Tokyo，就在 Tokyo 建立同規格 instance。不要花時間搶 `VM.Standard.A1.Flex`。2026 年在熱門區域幾乎拿不到 Always Free A1.Flex 容量，這個 runner 使用 `VM.Standard.E2.1.Micro` 加 swap。
+建立後等 instance state 變成 `Running`。打開 instance details，複製 `Public IPv4 address`。在本機 SSH config 加入：
 
-## 2. 貼上 Cloud-Init
+```sshconfig
+Host oc_gitrunner
+  HostName YOUR_PUBLIC_IPV4
+  User opc
+  IdentityFile ~/.ssh/id_ed25519
+```
 
-建立 instance 時，把 [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml) 貼到 Oracle Cloud 的 cloud-init/user-data 欄位。
+測試 SSH：
+
+```sh
+ssh oc_gitrunner
+```
+
+不要花時間搶 `VM.Standard.A1.Flex`。2026 年在熱門區域幾乎拿不到 Always Free A1.Flex 容量，這個 runner 使用 `VM.Standard.E2.1.Micro` 加 swap。
+
+## 2. 確認 Cloud-Init
+
+建立 instance 的步驟已經把 [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml) 貼到 Oracle Cloud initialization script 欄位。
 
 cloud-init 會做這些事：
 
