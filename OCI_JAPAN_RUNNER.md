@@ -21,21 +21,21 @@ Create one VM:
 7. In `Image and shape`, click `Edit`.
 8. Set Image to `Oracle Linux 10`.
 9. Set Shape to `VM.Standard.E2.1.Micro`. Confirm it is marked Always Free-eligible.
-10. In `Networking`, choose `Create new virtual cloud network` and keep the default public subnet settings. The VM needs one VNIC, a public subnet, and a public IPv4 address so you can SSH into it.
+10. In `Networking`, choose `Create new virtual cloud network`. Keep Oracle's default VCN and public subnet names. Confirm `Assign a public IPv4 address` is enabled. This creates the one public VNIC needed for SSH.
 11. In `Add SSH keys`, choose `Paste public keys` and paste your local SSH public key, usually from `~/.ssh/id_ed25519.pub`.
 12. In `Boot volume`, set the size to `50 GB`.
 13. Expand `Show advanced options -> Management -> Initialization script`.
 14. Paste the full contents of [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml).
 15. Click `Create`.
 
-Minimum expected VM configuration:
+Before clicking `Create`, the GUI should show this minimum configuration:
 
 - OS: Oracle Linux 10
 - Shape: `VM.Standard.E2.1.Micro`
-- Network: 1 VNIC in a public subnet with public IPv4
+- Network: 1 VNIC in a public subnet with public IPv4 enabled
 - Boot volume: 50 GB
 
-After creation, wait until the instance state is `Running`. Open the instance details page and copy the `Public IPv4 address`. Add it to your local SSH config:
+After creation, wait until the instance state is `Running`. Open the instance details page and copy the `Public IPv4 address`. On your own computer, open `~/.ssh/config` with a text editor and add:
 
 ```sshconfig
 Host oc_gitrunner

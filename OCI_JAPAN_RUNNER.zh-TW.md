@@ -21,21 +21,21 @@ Oracle 註冊時會要求有效信用卡，這是帳號驗證用。保持 Free T
 7. 在 `Image and shape` 點 `Edit`。
 8. Image 選 `Oracle Linux 10`。
 9. Shape 選 `VM.Standard.E2.1.Micro`，確認畫面標示 Always Free-eligible。
-10. `Networking` 選 `Create new virtual cloud network`，public subnet 設定保持預設。VM 需要 1 個 VNIC、public subnet、public IPv4 address，才方便 SSH 連線。
+10. `Networking` 選 `Create new virtual cloud network`。VCN 與 public subnet 名稱保持 Oracle 預設。確認 `Assign a public IPv4 address` 已啟用，這會建立 SSH 需要的 1 個 public VNIC。
 11. `Add SSH keys` 選 `Paste public keys`，貼上本機 SSH public key，通常是 `~/.ssh/id_ed25519.pub` 的內容。
 12. `Boot volume` 設成 `50 GB`。
 13. 展開 `Show advanced options -> Management -> Initialization script`。
 14. 貼上 [cloud-init/oci-github-runner.yml](cloud-init/oci-github-runner.yml) 的完整內容。
 15. 點 `Create`。
 
-最低預期 VM 設定：
+點 `Create` 之前，GUI 應該顯示這些最低設定：
 
 - OS：Oracle Linux 10
 - Shape：`VM.Standard.E2.1.Micro`
-- Network：1 個 VNIC，在 public subnet，並有 public IPv4
+- Network：1 個 VNIC，在 public subnet，並啟用 public IPv4
 - Boot volume：50 GB
 
-建立後等 instance state 變成 `Running`。打開 instance details，複製 `Public IPv4 address`。在本機 SSH config 加入：
+建立後等 instance state 變成 `Running`。打開 instance details，複製 `Public IPv4 address`。在自己的電腦用文字編輯器打開 `~/.ssh/config`，加入：
 
 ```sshconfig
 Host oc_gitrunner

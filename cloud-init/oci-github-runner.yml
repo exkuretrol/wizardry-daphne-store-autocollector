@@ -23,6 +23,23 @@ packages:
   - krb5-libs
   - zlib-ng-compat
   - libicu
+  - atk
+  - at-spi2-atk
+  - at-spi2-core
+  - cups-libs
+  - libXcomposite
+  - libXdamage
+  - libXfixes
+  - libXi
+  - libXrandr
+  - libXtst
+  - libdrm
+  - mesa-libgbm
+  - pango
+  - alsa-lib
+  - libxkbcommon
+  - gtk3
+  - nss
 
 write_files:
   - path: /usr/local/sbin/setup-wvd-github-runner.sh
