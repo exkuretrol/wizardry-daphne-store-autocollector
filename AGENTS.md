@@ -9,7 +9,7 @@ This repository contains small Python autocollectors for Wizardry Variants Daphn
 - `requirements.txt` lists runtime dependencies.
 - `.github/workflows/python-app.yml` runs the international collector on the weekly GitHub Actions schedule.
 - `.github/workflows/keep-alive.yml` keeps scheduled workflows from being disabled after inactivity.
-- `setup_vm.sh` supports VM provisioning for the JP collector.
+- `cloud-init/oci-github-runner.yml` provisions the OCI self-hosted runner used by the JP collector.
 - Runtime screenshots and traces are written to `artifacts/` and must remain uncommitted.
 
 ## Build, Test, and Development Commands
