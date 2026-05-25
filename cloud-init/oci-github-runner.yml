@@ -2,11 +2,10 @@
 #
 # Oracle Cloud / cloud-init template for the JP self-hosted GitHub Actions runner.
 #
-# Safe default: this prepares the VM, downloads the runner, and adds the reboot
-# cron. It does not check out this repo; GitHub Actions does that with
-# actions/checkout inside the workflow. It also does not register with GitHub
-# unless RUNNER_TOKEN is filled in below. Runner registration tokens are
-# short-lived; generate one from:
+# This prepares the VM, downloads the runner, and adds the reboot cron. It does
+# not check out this repo; GitHub Actions does that with actions/checkout inside
+# the workflow. It does not register with GitHub because runner registration
+# tokens are short-lived; generate one from:
 #   Repository -> Settings -> Actions -> Runners -> New self-hosted runner
 #
 # After the VM boots, check progress with:
@@ -40,12 +39,7 @@ write_files:
       RUNNER_ARCH="x64"
       REPO_URL="https://github.com/exkuretrol/wizardry-daphne-store-autocollector"
 
-      # Optional: paste a fresh one-time token before first boot if you want
-      # cloud-init to register the runner automatically. Leave blank to prepare
-      # the VM only, then run ./config.sh manually later.
-      RUNNER_TOKEN=""
       RUNNER_LABELS="self-hosted,linux,oci,jp"
-      RUNNER_NAME="$(hostname)-wvd-jp"
       SWAP_FILE="/swapfile"
 
       install -d -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_DIR}"
@@ -91,16 +85,17 @@ write_files:
       crontab "${tmp}"
       rm -f "${tmp}"
 
-      if [ -z "${RUNNER_TOKEN}" ]; then
-        cat >/root/wvd-runner-next-steps.txt <<EOF
+      cat >/root/wvd-runner-next-steps.txt <<EOF
       Runner files are ready at:
         ${RUNNER_DIR}
 
       Finish registration:
         cd ${RUNNER_DIR}
         ./config.sh --url ${REPO_URL} --token YOUR_TOKEN --labels ${RUNNER_LABELS}
-        sudo ./svc.sh install
+        sudo ./svc.sh install ${RUNNER_USER}
+        sudo chcon -R -t bin_t ${RUNNER_DIR}
         sudo ./svc.sh start
+        sudo ./svc.sh status
 
       Add repository secrets:
         WIZARDRY_JP_EMAIL
@@ -108,27 +103,8 @@ write_files:
 
       The workflow will check out the repository with actions/checkout.
       EOF
-        exit 0
-      fi
-
-      if [ ! -f .runner ]; then
-        sudo -u "${RUNNER_USER}" ./config.sh \
-          --unattended \
-          --url "${REPO_URL}" \
-          --token "${RUNNER_TOKEN}" \
-          --name "${RUNNER_NAME}" \
-          --labels "${RUNNER_LABELS}" \
-          --replace
-      fi
-
-      ./svc.sh install "${RUNNER_USER}"
-      if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
-        chcon -R -t bin_t "${RUNNER_DIR}" || true
-      fi
-      ./svc.sh start
-      ./svc.sh status || true
 
 runcmd:
   - /usr/local/sbin/setup-wvd-github-runner.sh
 
-final_message: "WVD JP GitHub runner cloud-init finished. See /root/wvd-runner-next-steps.txt if RUNNER_TOKEN was blank."
+final_message: "WVD JP GitHub runner cloud-init finished. See /root/wvd-runner-next-steps.txt."
