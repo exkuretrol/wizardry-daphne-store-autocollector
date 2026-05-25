@@ -46,6 +46,7 @@ write_files:
       RUNNER_TOKEN=""
       RUNNER_LABELS="self-hosted,linux,oci,jp"
       RUNNER_NAME="$(hostname)-wvd-jp"
+      SWAP_FILE="/swapfile"
 
       install -d -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_DIR}"
       cd "${RUNNER_DIR}"
@@ -65,6 +66,18 @@ write_files:
       # executable content before installing/starting the service.
       if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
         chcon -R -t bin_t "${RUNNER_DIR}" || true
+      fi
+
+      # Chromium plus the runner can exceed small Always Free RAM. Keep swap
+      # persistent across the scheduled pre-run reboot.
+      if ! swapon --show | grep -q "${SWAP_FILE}"; then
+        fallocate -l 2G "${SWAP_FILE}" || dd if=/dev/zero of="${SWAP_FILE}" bs=1M count=2048
+        chmod 600 "${SWAP_FILE}"
+        mkswap "${SWAP_FILE}"
+        swapon "${SWAP_FILE}"
+      fi
+      if ! grep -q "^${SWAP_FILE} " /etc/fstab; then
+        echo "${SWAP_FILE} none swap sw 0 0" >> /etc/fstab
       fi
 
       # Best-effort dependency install. Oracle Linux 10 may not have lttng-ust;

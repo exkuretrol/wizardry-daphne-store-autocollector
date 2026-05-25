@@ -51,6 +51,8 @@ The template does not clone this repository. The GitHub Actions workflow is resp
 - uses: actions/checkout@v6
 ```
 
+The workflow also ensures a persistent 2 GB `/swapfile` before launching Chromium. This matters on small Oracle instances because the runner service and headless Chromium can exceed physical RAM during login.
+
 By default, the template does not register the runner because GitHub runner registration tokens are short-lived. After boot, finish registration manually:
 
 ```sh
