@@ -1,0 +1,121 @@
+#cloud-config
+#
+# Oracle Cloud / cloud-init template for the JP self-hosted GitHub Actions runner.
+#
+# Safe default: this prepares the VM, downloads the runner, and adds the reboot
+# cron. It does not check out this repo; GitHub Actions does that with
+# actions/checkout inside the workflow. It also does not register with GitHub
+# unless RUNNER_TOKEN is filled in below. Runner registration tokens are
+# short-lived; generate one from:
+#   Repository -> Settings -> Actions -> Runners -> New self-hosted runner
+#
+# After the VM boots, check progress with:
+#   sudo tail -f /var/log/cloud-init-output.log
+
+package_update: true
+packages:
+  - curl
+  - tar
+  - gzip
+  - git
+  - python3
+  - python3-pip
+  - openssl-libs
+  - krb5-libs
+  - zlib-ng-compat
+  - libicu
+
+write_files:
+  - path: /usr/local/sbin/setup-wvd-github-runner.sh
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      RUNNER_USER="opc"
+      RUNNER_HOME="/home/${RUNNER_USER}"
+      RUNNER_DIR="${RUNNER_HOME}/actions-runner"
+      RUNNER_VERSION="2.334.0"
+      RUNNER_ARCH="x64"
+      REPO_URL="https://github.com/exkuretrol/wizardry-daphne-store-autocollector"
+
+      # Optional: paste a fresh one-time token before first boot if you want
+      # cloud-init to register the runner automatically. Leave blank to prepare
+      # the VM only, then run ./config.sh manually later.
+      RUNNER_TOKEN=""
+      RUNNER_LABELS="self-hosted,linux,oci,jp"
+      RUNNER_NAME="$(hostname)-wvd-jp"
+
+      install -d -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_DIR}"
+      cd "${RUNNER_DIR}"
+
+      archive="actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz"
+      url="https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/${archive}"
+      if [ ! -f "${archive}" ]; then
+        sudo -u "${RUNNER_USER}" curl -L -o "${archive}" "${url}"
+      fi
+
+      if [ ! -x ./config.sh ]; then
+        sudo -u "${RUNNER_USER}" tar xzf "${archive}"
+      fi
+
+      # Oracle Linux enables SELinux. systemd may refuse to execute runner
+      # scripts labeled user_home_t from /home, so label the runner tree as
+      # executable content before installing/starting the service.
+      if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
+        chcon -R -t bin_t "${RUNNER_DIR}" || true
+      fi
+
+      # Best-effort dependency install. Oracle Linux 10 may not have lttng-ust;
+      # the runner can still work for this Python/Playwright workflow.
+      ./bin/installdependencies.sh || true
+
+      # Reboot one hour before the scheduled JP collector workflow.
+      tmp="$(mktemp)"
+      crontab -l 2>/dev/null | grep -v "wvd-pre-run-reboot" > "${tmp}" || true
+      echo "0 10 * * 1 /usr/sbin/reboot # wvd-pre-run-reboot" >> "${tmp}"
+      crontab "${tmp}"
+      rm -f "${tmp}"
+
+      if [ -z "${RUNNER_TOKEN}" ]; then
+        cat >/root/wvd-runner-next-steps.txt <<EOF
+      Runner files are ready at:
+        ${RUNNER_DIR}
+
+      Finish registration:
+        cd ${RUNNER_DIR}
+        ./config.sh --url ${REPO_URL} --token YOUR_TOKEN --labels ${RUNNER_LABELS}
+        sudo ./svc.sh install
+        sudo ./svc.sh start
+
+      Add repository secrets:
+        WIZARDRY_JP_EMAIL
+        WIZARDRY_JP_PASSWORD
+
+      The workflow will check out the repository with actions/checkout.
+      EOF
+        exit 0
+      fi
+
+      if [ ! -f .runner ]; then
+        sudo -u "${RUNNER_USER}" ./config.sh \
+          --unattended \
+          --url "${REPO_URL}" \
+          --token "${RUNNER_TOKEN}" \
+          --name "${RUNNER_NAME}" \
+          --labels "${RUNNER_LABELS}" \
+          --replace
+      fi
+
+      ./svc.sh install "${RUNNER_USER}"
+      if command -v getenforce >/dev/null 2>&1 && [ "$(getenforce)" = "Enforcing" ]; then
+        chcon -R -t bin_t "${RUNNER_DIR}" || true
+      fi
+      ./svc.sh start
+      ./svc.sh status || true
+
+runcmd:
+  - /usr/local/sbin/setup-wvd-github-runner.sh
+
+final_message: "WVD JP GitHub runner cloud-init finished. See /root/wvd-runner-next-steps.txt if RUNNER_TOKEN was blank."
