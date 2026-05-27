@@ -20,6 +20,33 @@
 
 兩邊能領的數量一樣：每週 50 寶石，第一次能額外領 800 個寶石。獎勵當然是越多越好，可以依照自己的帳號狀態設定 Global 與 Japan workflow。
 
+## Workflow 差異
+
+```mermaid
+flowchart TD
+  subgraph Global["Global Webstore"]
+    G1["設定 WIZARDRY_USER_ID secret"]
+    G2["GitHub-hosted runner"]
+    G3["執行 main.py"]
+    G4["用遊戲內 User ID 登入"]
+    G5["從 store.wizardry.info 領獎"]
+    G1 --> G2 --> G3 --> G4 --> G5
+  end
+
+  subgraph Japan["Japan Webstore"]
+    J1["註冊 JP webstore 帳號"]
+    J2["綁定 player ID"]
+    J3["建立 OCI 日本 VM"]
+    J4["註冊 oci,jp labels 的 self-hosted runner"]
+    J5["設定 WIZARDRY_JP_EMAIL 與 WIZARDRY_JP_PASSWORD secrets"]
+    J6["從日本 IP 執行 main_jp.py"]
+    J7["從 webstore.wizardry.info 領獎"]
+    J1 --> J2 --> J3 --> J4 --> J5 --> J6 --> J7
+  end
+
+  G5 -. "獎勵數量相同" .- J7
+```
+
 ## Global 設定
 
 1. Fork 這個 repository。

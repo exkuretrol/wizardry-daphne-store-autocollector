@@ -20,6 +20,33 @@ This repository collects free rewards from the Wizardry Variants Daphne web stor
 
 The reward amount is the same on both stores: 50 gems every week, plus an extra 800 gems the first time the account claims the bonus.
 
+## Workflow Difference
+
+```mermaid
+flowchart TD
+  subgraph Global["Global Webstore"]
+    G1["Set WIZARDRY_USER_ID secret"]
+    G2["GitHub-hosted runner"]
+    G3["Run main.py"]
+    G4["Login with in-game user ID"]
+    G5["Claim rewards from store.wizardry.info"]
+    G1 --> G2 --> G3 --> G4 --> G5
+  end
+
+  subgraph Japan["Japan Webstore"]
+    J1["Create JP webstore account"]
+    J2["Associate player ID"]
+    J3["Create OCI Japan VM"]
+    J4["Register self-hosted runner with oci,jp labels"]
+    J5["Set WIZARDRY_JP_EMAIL and WIZARDRY_JP_PASSWORD secrets"]
+    J6["Run main_jp.py from Japan IP"]
+    J7["Claim rewards from webstore.wizardry.info"]
+    J1 --> J2 --> J3 --> J4 --> J5 --> J6 --> J7
+  end
+
+  G5 -. "Same reward amount" .- J7
+```
+
 ## Global Setup
 
 1. Fork this repository.
